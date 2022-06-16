@@ -4,6 +4,7 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 let noteData = require('./db/db.json');
+const util = require('util');
 
 const idGen = require('./routes/idGen.js');
 
@@ -22,7 +23,10 @@ app.get('/notes', (req, res) => {
     console.log('GET /notes')
     res.sendFile(path.join(__dirname, 'public/notes.html'))});
 
-app.get('/api/notes', )
+app.get('/api/notes', (req, res) => {
+    console.log(`${req.method} request received for notes`);
+    res.sendFile(path.join(__dirname, './db/db.json'));   
+})
 
 app.post('/api/notes', (req, res) => {
     console.log(`${req.method} request received for notes`);
@@ -62,7 +66,22 @@ app.post('/api/notes', (req, res) => {
 
 app.delete('/api/notes/:id', (req, res) => {
     const noteId = req.params.id;
+    console.log(req.params)
     console.log(noteId);
+    fs.readFile('./db/db.json', 'utf8', (err, data) => {
+        const noteDel = JSON.parse(data);
+        console.log(noteDel)
+        if (err) {
+            console.error(err);
+        } else { for (i =0 ; i < noteDel.length ; i++) {
+            if (noteDel[i].id === noteId) {
+                noteDel.splice(i, 1);
+                fs.writeFile('./db/db.json', JSON.stringify(noteDel, null, 4), (writeErr) => writeErr ? console.error(writeErr) : console.log(`Successfully deleted note ${noteId}`))
+            } else {
+                console.log(`ID:${noteId} not found` )
+            }
+        }} 
+    })
     res.end();
 })
 
